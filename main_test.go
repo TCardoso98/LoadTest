@@ -94,28 +94,32 @@ func TestLoadYaml(t *testing.T) {
 	assert.EqualValues(t, expectedValue, value)
 }
 
-/*func TestLoadConfig(t *testing.T) {
-	expectedValue := ConfigOptions{
-		PulsarConnection: {
-			Url:             "pulsar+ssl://localhost:6651",
-			AuthCertificate: "PULSAR_BROKER_CLIENT.cert.pem",
-			AuthKey:         "PULSAR_BROKER_CLIENT.key.p8",
+func TestLoadConfig(t *testing.T) {
+	/*expectedValue := ConfigFile{
+		ConfigOptions {
+			PulsarConnection {
+				Url:             "pulsar+ssl://localhost:6651",
+				AuthCertificate: "PULSAR_BROKER_CLIENT.cert.pem",
+				AuthKey:         "PULSAR_BROKER_CLIENT.key.p8",
+			},
+			TestParameters{
+				Topic:            "TOPIC-A",
+				MessageQuantity:  10,
+				FlowFrequency:    0,
+				ProducerName:     "",
+				ConsumerName:     "",
+				SubscriptionName: "sub_test",
+			},
 		},
-		TestParameters: TestParameters{
-			Topic:            "TOPIC-A",
-			MessageQuantity:  10,
-			FlowFrequency:    0,
-			ProducerName:     "",
-			ConsumerName:     "",
-			SubscriptionName: "sub_test",
-		},
-	}
-	var value ConfigOptions
-	err := LoadYaml(TEST_YAML_FILEPATH, &value)
-	assert.Nil(t, err)
-	assert.EqualValues(t, expectedValue, value)
-}*/
+	}*/
 
-func TestValidateConfig(t *testing.T) {
+	var value ConfigFile
+	//value := make(map[string]ConfigOptions)
+	err := LoadYaml(TEST_CONFIG_FILEPATH, &value)
+	assert.Nil(t, err)
+	//assert.EqualValues(t, expectedValue, value)
+}
+
+func TestLoadTest(t *testing.T) {
 
 }
