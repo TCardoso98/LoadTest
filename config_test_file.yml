@@ -1,0 +1,12 @@
+Config:
+	Pulsar_Connection:
+		Url:  "pulsar+ssl://localhost:6651"
+		Auth_Certificate: "PULSAR_BROKER_CLIENT.cert.pem"
+		Auth_Key: "PULSAR_BROKER_CLIENT.key.p8"
+	Test_Parameters:
+		Topic: "TOPIC-A"
+		N_Messages: 10
+		Flow_Frequency: 0
+		Producer_Name: ""
+		Consumer_Name: ""
+		Subscription_Name: "sub_test"

@@ -1,0 +1,5 @@
+/PULSAR_BROKER_CLIENT.cert.pem
+/PULSAR_BROKER_CLIENT.key.p8
+/SIBS_PULSAR_ca-chain.bundle.cert.pem
+.vscode/
+.idea/
