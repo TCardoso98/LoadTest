@@ -8,11 +8,11 @@ import (
 )
 
 type LoadTestResults struct {
-	timeElapsed             float64
-	successfulPayloads      int
-	failedPayloads          int
-	accumulativePayloadSize int64
-	payloadPerSecond        float64
+	TimeElapsed             float64
+	SuccessfulPayloads      int
+	FailedPayloads          int
+	AccumulativePayloadSize int64
+	PayloadPerSecond        float64
 }
 
 func LoadTest(config ConfigFile, payload []byte) (LoadTestResults, error) {
@@ -62,10 +62,10 @@ func LoadTest(config ConfigFile, payload []byte) (LoadTestResults, error) {
 		}
 	}
 	return LoadTestResults{
-		timeElapsed:             timeElapsed,
-		successfulPayloads:      successfulPayloads,
-		failedPayloads:          failedPayloads,
-		accumulativePayloadSize: int64(config.ConfigOptions.TestParameters.NMessages*len(payload)) / 8,
-		payloadPerSecond:        timeElapsed / float64(successfulPayloads),
+		TimeElapsed:             timeElapsed,
+		SuccessfulPayloads:      successfulPayloads,
+		FailedPayloads:          failedPayloads,
+		AccumulativePayloadSize: int64(config.ConfigOptions.TestParameters.NMessages*len(payload)) / 8,
+		PayloadPerSecond:        timeElapsed / float64(successfulPayloads),
 	}, nil
 }

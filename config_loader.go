@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
 	"gopkg.in/yaml.v3"
@@ -35,8 +34,6 @@ func LoadYaml(filePath string, out interface{}) error {
 	if err := yaml.Unmarshal(f, out); err != nil {
 		return err
 	}
-
-	fmt.Println(out)
 
 	return nil
 }
