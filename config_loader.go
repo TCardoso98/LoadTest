@@ -30,17 +30,9 @@ func LoadYaml(filePath string, out interface{}) error {
 		return err
 	}
 
-	// Unmarshal our input YAML file into empty E (var c)
 	if err := yaml.Unmarshal(f, out); err != nil {
 		return err
 	}
 
 	return nil
-}
-
-func main() {
-	var value ConfigFile
-	//value := make(map[string]ConfigOptions)
-	LoadYaml("config_test_file.yml", &value)
-
 }

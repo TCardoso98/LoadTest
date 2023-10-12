@@ -24,11 +24,13 @@ type YamlTest struct {
 
 const TEST_TOPIC string = "TOPIC-A"
 const TEST_SUBSCRIPTION string = "sub_test"
+const TEST_PRODUCER_NAME string = "producer_name_test"
+const TEST_CONSUMER_NAME string = "consumer_name_test"
 const TEST_YAML_FILEPATH string = "yaml_test_file.yml"
 const TEST_CONFIG_FILEPATH string = "config_test_file.yml"
 
 func TestClientCreation(t *testing.T) {
-	client, err := CreateClient(ClientOptions)
+	client, err := CreateClient(clientOptionsTest)
 	defer client.Close()
 	assert.Nil(t, err)
 	assert.NotNil(t, client)
@@ -38,7 +40,7 @@ func TestProducerCreation(t *testing.T) {
 	client, err := CreateClient(clientOptionsTest)
 	defer client.Close()
 
-	producer, err := CreateProducer(TEST_TOPIC, client)
+	producer, err := CreateProducer(TEST_TOPIC, TEST_PRODUCER_NAME, client)
 	defer producer.Close()
 	assert.Nil(t, err)
 	assert.NotNil(t, producer)
@@ -48,7 +50,7 @@ func TestConsumerCreation(t *testing.T) {
 	client, err := CreateClient(clientOptionsTest)
 	defer client.Close()
 
-	consumer, err := CreateConsumer(TEST_TOPIC, TEST_SUBSCRIPTION, client)
+	consumer, err := CreateConsumer(TEST_TOPIC, TEST_SUBSCRIPTION, TEST_CONSUMER_NAME, client)
 	defer consumer.Close()
 	assert.Nil(t, err)
 	assert.NotNil(t, consumer)
@@ -58,7 +60,7 @@ func TestSendMessage(t *testing.T) {
 	client, err := CreateClient(clientOptionsTest)
 	defer client.Close()
 
-	producer, err := CreateProducer(TEST_TOPIC, client)
+	producer, err := CreateProducer(TEST_TOPIC, TEST_PRODUCER_NAME, client)
 	defer producer.Close()
 
 	ctx := context.Background()
@@ -74,7 +76,7 @@ func TestConsumeMessage(t *testing.T) {
 	client, _ := CreateClient(clientOptionsTest)
 	defer client.Close()
 
-	consumer, _ := CreateConsumer(TEST_TOPIC, TEST_SUBSCRIPTION, client)
+	consumer, _ := CreateConsumer(TEST_TOPIC, TEST_SUBSCRIPTION, TEST_CONSUMER_NAME, client)
 	defer consumer.Close()
 	message, err := ConsumeMessage(consumer)
 

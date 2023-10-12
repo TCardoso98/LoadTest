@@ -2,14 +2,22 @@ package main
 
 import (
 	"context"
+	"errors"
 
 	"github.com/apache/pulsar-client-go/pulsar"
 )
 
-func CreateProducer(topic string, client pulsar.Client) (pulsar.Producer, error) {
-	producer, err := client.CreateProducer(pulsar.ProducerOptions{
+func CreateProducer(topic string, name string, client pulsar.Client) (pulsar.Producer, error) {
+	if topic == "" {
+		return nil, errors.New("empty topic")
+	}
+	producerOptions := pulsar.ProducerOptions{
 		Topic: topic,
-	})
+	}
+	if name != "" {
+		producerOptions.Name = name
+	}
+	producer, err := client.CreateProducer(producerOptions)
 
 	if err != nil {
 		return nil, err

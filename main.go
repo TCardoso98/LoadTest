@@ -2,6 +2,9 @@ package main
 
 import (
 	"context"
+	"fmt"
+	"log"
+	"os"
 	"time"
 
 	"github.com/apache/pulsar-client-go/pulsar"
@@ -14,6 +17,8 @@ type LoadTestResults struct {
 	AccumulativePayloadSize int64
 	PayloadPerSecond        float64
 }
+
+const DEFAULT_CONFIG_FILEPATH = "config_test_file.yml"
 
 func LoadTest(config ConfigFile, payload []byte) (LoadTestResults, error) {
 	var failedPayloads = 0
@@ -34,7 +39,10 @@ func LoadTest(config ConfigFile, payload []byte) (LoadTestResults, error) {
 		return LoadTestResults{}, err
 	}
 
-	producer, err := CreateProducer(config.ConfigOptions.TestParameters.Topic, client)
+	producer, err := CreateProducer(
+		config.ConfigOptions.TestParameters.Topic,
+		config.ConfigOptions.TestParameters.ProducerName,
+		client)
 	defer producer.Close()
 	if err != nil {
 		return LoadTestResults{}, err
@@ -43,6 +51,7 @@ func LoadTest(config ConfigFile, payload []byte) (LoadTestResults, error) {
 	consumer, err := CreateConsumer(
 		config.ConfigOptions.TestParameters.Topic,
 		config.ConfigOptions.TestParameters.SubscriptionName,
+		config.ConfigOptions.TestParameters.ConsumerName,
 		client)
 	defer consumer.Close()
 
@@ -68,4 +77,22 @@ func LoadTest(config ConfigFile, payload []byte) (LoadTestResults, error) {
 		AccumulativePayloadSize: int64(config.ConfigOptions.TestParameters.NMessages*len(payload)) / 8,
 		PayloadPerSecond:        timeElapsed / float64(successfulPayloads),
 	}, nil
+}
+
+func main() {
+	var config ConfigFile
+	configFilePath := DEFAULT_CONFIG_FILEPATH
+	if len(os.Args) > 1 {
+		configFilePath = os.Args[1]
+	}
+	err := LoadYaml(configFilePath, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	results, err := LoadTest(config, []byte(fmt.Sprintf("hello world")))
+	if err != nil {
+		log.Println(err)
+	} else {
+		fmt.Printf("%+v\n", results)
+	}
 }

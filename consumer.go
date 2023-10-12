@@ -2,15 +2,26 @@ package main
 
 import (
 	"context"
+	"errors"
 
 	"github.com/apache/pulsar-client-go/pulsar"
 )
 
-func CreateConsumer(topic string, subscriptionName string, client pulsar.Client) (pulsar.Consumer, error) {
-	consumer, err := client.Subscribe(pulsar.ConsumerOptions{
+func CreateConsumer(topic string, subscriptionName string, name string, client pulsar.Client) (pulsar.Consumer, error) {
+	if topic == "" {
+		return nil, errors.New("empty topic")
+	}
+	if subscriptionName == "" {
+		return nil, errors.New("empty topic")
+	}
+	consumerOptions := pulsar.ConsumerOptions{
 		Topic:            topic,
 		SubscriptionName: subscriptionName,
-	})
+	}
+	if name != "" {
+		consumerOptions.Name = name
+	}
+	consumer, err := client.Subscribe(consumerOptions)
 
 	if err != nil {
 		return nil, err
