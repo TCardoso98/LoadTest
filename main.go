@@ -40,8 +40,8 @@ func LoadTest(config ConfigFile) (LoadTestResults, error) {
 	}
 
 	producer, err := CreateProducer(
-		config.ConfigOptions.TestParameters.Topic,
-		config.ConfigOptions.TestParameters.ProducerName,
+		config.ConfigOptions.TestParameters.ProducerParameters.ProducerTopic,
+		config.ConfigOptions.TestParameters.ProducerParameters.ProducerName,
 		client)
 	defer producer.Close()
 	if err != nil {
@@ -49,9 +49,9 @@ func LoadTest(config ConfigFile) (LoadTestResults, error) {
 	}
 
 	consumer, err := CreateConsumer(
-		config.ConfigOptions.TestParameters.Topic,
-		config.ConfigOptions.TestParameters.SubscriptionName,
-		config.ConfigOptions.TestParameters.ConsumerName,
+		config.ConfigOptions.TestParameters.ConsumerParameters.ConsumerTopic,
+		config.ConfigOptions.TestParameters.ConsumerParameters.SubscriptionName,
+		config.ConfigOptions.TestParameters.ConsumerParameters.ConsumerName,
 		client)
 	defer consumer.Close()
 
@@ -60,7 +60,8 @@ func LoadTest(config ConfigFile) (LoadTestResults, error) {
 		_, err := SendMessage(
 			producer,
 			context.Background(),
-			[]byte(fmt.Sprintf(config.ConfigOptions.TestParameters.Payload)))
+			[]byte(fmt.Sprintf(
+				config.ConfigOptions.TestParameters.ProducerParameters.Payload)))
 
 		if err != nil {
 			_, err = ConsumeMessage(consumer)
@@ -79,7 +80,7 @@ func LoadTest(config ConfigFile) (LoadTestResults, error) {
 		SuccessfulPayloads: successfulPayloads,
 		FailedPayloads:     failedPayloads,
 		AccumulativePayloadSize: int64(config.ConfigOptions.TestParameters.NMessages*
-			len(config.ConfigOptions.TestParameters.Payload)) / 8,
+			len(config.ConfigOptions.TestParameters.ProducerParameters.Payload)) / 8,
 		PayloadPerSecond: timeElapsed / float64(successfulPayloads),
 	}, nil
 }

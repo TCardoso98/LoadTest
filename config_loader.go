@@ -14,13 +14,17 @@ type ConfigFile struct {
 			AuthKey         string `yaml:"Auth_Key"`
 		} `yaml:"Pulsar_Connection"`
 		TestParameters struct {
-			Topic            string `yaml:"Topic"`
-			NMessages        int    `yaml:"N_Messages"`
-			FlowFrequency    int    `yaml:"Flow_Frequency"`
-			ProducerName     string `yaml:"Producer_Name"`
-			ConsumerName     string `yaml:"Consumer_Name"`
-			SubscriptionName string `yaml:"Subscription_Name"`
-			Payload          string `yaml:"Payload"`
+			NMessages          int `yaml:"N_Messages"`
+			ProducerParameters struct {
+				ProducerTopic string `yaml:"Producer_Topic"`
+				ProducerName  string `yaml:"Producer_Name"`
+				Payload       string `yaml:"Payload"`
+			} `yaml:"Producer_Parameters"`
+			ConsumerParameters struct {
+				ConsumerTopic    string `yaml:"Consumer_Topic"`
+				SubscriptionName string `yaml:"Subscription_Name"`
+				ConsumerName     string `yaml:"Consumer_Name"`
+			} `yaml:"Consumer_Parameters"`
 		} `yaml:"Test_Parameters"`
 	} `yaml:"Config"`
 }
