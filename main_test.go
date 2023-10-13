@@ -125,7 +125,7 @@ func TestLoadConfig(t *testing.T) {
 func TestLoadTest(t *testing.T) {
 	var config ConfigFile
 	err := LoadYaml(TEST_CONFIG_FILEPATH, &config)
-	results, err := LoadTest(config, []byte(fmt.Sprintf("hello world")))
+	results, err := LoadTest(config)
 	assert.Nil(t, err)
 	assert.NotEmpty(t, results)
 }

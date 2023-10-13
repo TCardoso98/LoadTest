@@ -20,6 +20,7 @@ type ConfigFile struct {
 			ProducerName     string `yaml:"Producer_Name"`
 			ConsumerName     string `yaml:"Consumer_Name"`
 			SubscriptionName string `yaml:"Subscription_Name"`
+			Payload          string `yaml:"Payload"`
 		} `yaml:"Test_Parameters"`
 	} `yaml:"Config"`
 }

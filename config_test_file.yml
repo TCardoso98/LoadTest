@@ -5,8 +5,9 @@ Config:
   Auth_Key: "PULSAR_BROKER_CLIENT.key.p8"
  Test_Parameters:
   Topic: "TOPIC-A"
-  N_Messages: 10
+  N_Messages: 100
   Flow_Frequency: 0
   Producer_Name: ""
   Consumer_Name: ""
   Subscription_Name: "sub_test"
+  Payload: "Hello world"

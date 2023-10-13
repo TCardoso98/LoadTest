@@ -20,7 +20,7 @@ type LoadTestResults struct {
 
 const DEFAULT_CONFIG_FILEPATH = "config_test_file.yml"
 
-func LoadTest(config ConfigFile, payload []byte) (LoadTestResults, error) {
+func LoadTest(config ConfigFile) (LoadTestResults, error) {
 	var failedPayloads = 0
 	var successfulPayloads = 0
 	var timeElapsed = 0.0
@@ -57,7 +57,11 @@ func LoadTest(config ConfigFile, payload []byte) (LoadTestResults, error) {
 
 	for i := 0; i < config.ConfigOptions.TestParameters.NMessages; i++ {
 		start := time.Now()
-		_, err := SendMessage(producer, context.Background(), payload)
+		_, err := SendMessage(
+			producer,
+			context.Background(),
+			[]byte(fmt.Sprintf(config.ConfigOptions.TestParameters.Payload)))
+
 		if err != nil {
 			_, err = ConsumeMessage(consumer)
 		}
@@ -71,11 +75,12 @@ func LoadTest(config ConfigFile, payload []byte) (LoadTestResults, error) {
 		}
 	}
 	return LoadTestResults{
-		TimeElapsed:             timeElapsed,
-		SuccessfulPayloads:      successfulPayloads,
-		FailedPayloads:          failedPayloads,
-		AccumulativePayloadSize: int64(config.ConfigOptions.TestParameters.NMessages*len(payload)) / 8,
-		PayloadPerSecond:        timeElapsed / float64(successfulPayloads),
+		TimeElapsed:        timeElapsed,
+		SuccessfulPayloads: successfulPayloads,
+		FailedPayloads:     failedPayloads,
+		AccumulativePayloadSize: int64(config.ConfigOptions.TestParameters.NMessages*
+			len(config.ConfigOptions.TestParameters.Payload)) / 8,
+		PayloadPerSecond: timeElapsed / float64(successfulPayloads),
 	}, nil
 }
 
@@ -89,7 +94,7 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	results, err := LoadTest(config, []byte(fmt.Sprintf("hello world")))
+	results, err := LoadTest(config)
 	if err != nil {
 		log.Println(err)
 	} else {
