@@ -16,6 +16,7 @@ type ConfigFile struct {
 		TestParameters struct {
 			NMessages          int  `yaml:"N_Messages"`
 			ParallelTest       bool `yaml:"Parallel_Test"`
+			MultithreadTest    bool `yaml:"Multithread_Test"`
 			ProducerParameters struct {
 				ProducerTopic   string `yaml:"Producer_Topic"`
 				ProducerName    string `yaml:"Producer_Name"`

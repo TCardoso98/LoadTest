@@ -51,13 +51,21 @@ func LoadTest(config ConfigFile) (LoadTestResults, LoadTestResults, error) {
 
 	payload := []byte(fmt.Sprintf(config.ConfigOptions.TestParameters.ProducerParameters.Payload))
 	log.Println("START TEST")
-	if config.ConfigOptions.TestParameters.ParallelTest {
+	if config.ConfigOptions.TestParameters.MultithreadTest {
+		producerResults, consumerResults := LoadTestParallelMultiThread(config.ConfigOptions.TestParameters.ProducerParameters.ProduceQuantity,
+			config.ConfigOptions.TestParameters.ConsumerParameters.ConsumeQuantity,
+			payload,
+			producer,
+			consumer)
+		return producerResults, consumerResults, nil
+	} else if config.ConfigOptions.TestParameters.ParallelTest {
 		producerResults, consumerResults := LoadTestParallel(config.ConfigOptions.TestParameters.ProducerParameters.ProduceQuantity,
 			config.ConfigOptions.TestParameters.ConsumerParameters.ConsumeQuantity,
 			payload,
 			producer,
 			consumer)
 		return producerResults, consumerResults, nil
+
 	} else {
 		results, err := LoadTestSingleThread(config.ConfigOptions.TestParameters.ProducerParameters.ProduceQuantity,
 			payload, producer, consumer)
@@ -137,6 +145,28 @@ func LoadTestParallel(produceQuantity int, consumeQuantity int, payload []byte,
 	consumer pulsar.Consumer) (LoadTestResults, LoadTestResults) {
 	producerResults := LoadTestSendMessages(produceQuantity, payload, producer)
 	consumerResults := LoadTestConsumeMessages(consumeQuantity, consumer)
+
+	return producerResults, consumerResults
+}
+
+func LoadTestParallelMultiThread(produceQuantity int, consumeQuantity int, payload []byte,
+	producer pulsar.Producer,
+	consumer pulsar.Consumer) (LoadTestResults, LoadTestResults) {
+	c := make(chan LoadTestResults)
+	go func(c chan LoadTestResults) {
+		log.Println("SENDING MESSAGE PROCESS START")
+		c <- LoadTestSendMessages(produceQuantity, payload, producer)
+		log.Println("SENDING MESSAGE PROCESS FINISH")
+
+	}(c)
+	go func(c chan LoadTestResults) {
+		log.Println("RECEIVING MESSAGE PROCESS START")
+		c <- LoadTestConsumeMessages(consumeQuantity, consumer)
+		log.Println("RECEIVING MESSAGE PROCESS FINISH")
+
+	}(c)
+	producerResults := <-c
+	consumerResults := <-c
 
 	return producerResults, consumerResults
 }

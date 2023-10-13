@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"testing"
 
 	"github.com/apache/pulsar-client-go/pulsar"
@@ -31,42 +30,44 @@ const TEST_CONFIG_FILEPATH string = "config_test_file.yml"
 
 func TestClientCreation(t *testing.T) {
 	client, err := CreateClient(clientOptionsTest)
-	defer client.Close()
 	assert.Nil(t, err)
+	defer client.Close()
 	assert.NotNil(t, client)
 }
 
 func TestProducerCreation(t *testing.T) {
 	client, err := CreateClient(clientOptionsTest)
+	assert.Nil(t, err)
 	defer client.Close()
 
 	producer, err := CreateProducer(TEST_TOPIC, TEST_PRODUCER_NAME, client)
-	defer producer.Close()
 	assert.Nil(t, err)
+	defer producer.Close()
 	assert.NotNil(t, producer)
 }
 
 func TestConsumerCreation(t *testing.T) {
 	client, err := CreateClient(clientOptionsTest)
+	assert.Nil(t, err)
 	defer client.Close()
 
 	consumer, err := CreateConsumer(TEST_TOPIC, TEST_SUBSCRIPTION, TEST_CONSUMER_NAME, client)
-	defer consumer.Close()
 	assert.Nil(t, err)
+	defer consumer.Close()
 	assert.NotNil(t, consumer)
 }
 
 func TestSendMessage(t *testing.T) {
-	client, err := CreateClient(clientOptionsTest)
+	client, _ := CreateClient(clientOptionsTest)
 	defer client.Close()
 
-	producer, err := CreateProducer(TEST_TOPIC, TEST_PRODUCER_NAME, client)
+	producer, _ := CreateProducer(TEST_TOPIC, TEST_PRODUCER_NAME, client)
 	defer producer.Close()
 
 	ctx := context.Background()
 	assert.NotNil(t, ctx)
 
-	messageId, err := SendMessage(producer, ctx, []byte(fmt.Sprintf("hello world")))
+	messageId, err := SendMessage(producer, ctx, []byte("hello world"))
 	assert.Nil(t, err)
 	assert.NotNil(t, messageId)
 }
