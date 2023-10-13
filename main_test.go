@@ -125,7 +125,9 @@ func TestLoadConfig(t *testing.T) {
 func TestLoadTest(t *testing.T) {
 	var config ConfigFile
 	err := LoadYaml(TEST_CONFIG_FILEPATH, &config)
-	results, err := LoadTest(config)
 	assert.Nil(t, err)
-	assert.NotEmpty(t, results)
+	producerResults, consumerResults, err := LoadTest(config)
+	assert.Nil(t, err)
+	assert.NotEmpty(t, producerResults)
+	assert.NotEmpty(t, consumerResults)
 }

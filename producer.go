@@ -33,3 +33,17 @@ func SendMessage(producer pulsar.Producer, ctx context.Context, payload []byte) 
 	return producer.Send(ctx, &producerMessage)
 
 }
+
+func SendNMessages(quantity int, producer pulsar.Producer, ctx context.Context, payload []byte, ignoreError bool) ([]pulsar.MessageID, error) {
+	var messages []pulsar.MessageID = make([]pulsar.MessageID, quantity)
+	for i := 0; i < quantity; i++ {
+		messageId, err := SendMessage(producer, ctx, payload)
+		if err != nil {
+			if !ignoreError {
+				return nil, err
+			}
+		}
+		messages[i] = messageId
+	}
+	return messages, nil
+}

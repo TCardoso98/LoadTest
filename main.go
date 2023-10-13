@@ -14,17 +14,62 @@ type LoadTestResults struct {
 	TimeElapsed             float64
 	SuccessfulPayloads      int
 	FailedPayloads          int
-	AccumulativePayloadSize int64
-	PayloadPerSecond        float64
+	AccumulativePayloadSize int
+	SecondsPerPayload       float64
 }
 
 const DEFAULT_CONFIG_FILEPATH = "config_test_file.yml"
 
-func LoadTest(config ConfigFile) (LoadTestResults, error) {
-	var failedPayloads = 0
-	var successfulPayloads = 0
-	var timeElapsed = 0.0
-	var payloadPerSecond = 0.0
+func main() {
+	var config ConfigFile
+	configFilePath := DEFAULT_CONFIG_FILEPATH
+	if len(os.Args) > 1 {
+		configFilePath = os.Args[1]
+	}
+	err := LoadYaml(configFilePath, &config)
+	if err != nil {
+		log.Fatal(err)
+	}
+	resultsProducer, resultsConsumer, err := LoadTest(config)
+	if err != nil {
+		log.Println(err)
+	} else {
+		fmt.Printf("Producer Results:\n%+v\n\n", resultsProducer)
+		fmt.Printf("Consumer Results:\n%+v\n", resultsConsumer)
+	}
+}
+
+func LoadTest(config ConfigFile) (LoadTestResults, LoadTestResults, error) {
+
+	client, consumer, producer, err := LoadTestPreparation(config)
+	if err != nil {
+		return LoadTestResults{}, LoadTestResults{}, err
+	}
+	defer client.Close()
+	defer consumer.Close()
+	defer producer.Close()
+
+	payload := []byte(fmt.Sprintf(config.ConfigOptions.TestParameters.ProducerParameters.Payload))
+	log.Println("START TEST")
+	if config.ConfigOptions.TestParameters.ParallelTest {
+		producerResults, consumerResults := LoadTestParallel(config.ConfigOptions.TestParameters.ProducerParameters.ProduceQuantity,
+			config.ConfigOptions.TestParameters.ConsumerParameters.ConsumeQuantity,
+			payload,
+			producer,
+			consumer)
+		return producerResults, consumerResults, nil
+	} else {
+		results, err := LoadTestSingleThread(config.ConfigOptions.TestParameters.ProducerParameters.ProduceQuantity,
+			payload, producer, consumer)
+		if err != nil {
+			return LoadTestResults{}, LoadTestResults{}, err
+		}
+		return results, results, nil
+	}
+
+}
+
+func LoadTestPreparation(config ConfigFile) (pulsar.Client, pulsar.Consumer, pulsar.Producer, error) {
 	clientOptionsTest := pulsar.ClientOptions{
 		URL:                        config.ConfigOptions.PulsarConnection.URL,
 		TLSValidateHostname:        false,
@@ -34,34 +79,37 @@ func LoadTest(config ConfigFile) (LoadTestResults, error) {
 			config.ConfigOptions.PulsarConnection.AuthKey),
 	}
 	client, err := CreateClient(clientOptionsTest)
-	defer client.Close()
+
 	if err != nil {
-		return LoadTestResults{}, err
+		return nil, nil, nil, err
 	}
 
 	producer, err := CreateProducer(
 		config.ConfigOptions.TestParameters.ProducerParameters.ProducerTopic,
 		config.ConfigOptions.TestParameters.ProducerParameters.ProducerName,
 		client)
-	defer producer.Close()
 	if err != nil {
-		return LoadTestResults{}, err
+		return nil, nil, nil, err
 	}
-
 	consumer, err := CreateConsumer(
 		config.ConfigOptions.TestParameters.ConsumerParameters.ConsumerTopic,
 		config.ConfigOptions.TestParameters.ConsumerParameters.SubscriptionName,
 		config.ConfigOptions.TestParameters.ConsumerParameters.ConsumerName,
 		client)
-	defer consumer.Close()
+	if err != nil {
+		return nil, nil, nil, err
+	}
+	return client, consumer, producer, nil
+}
 
-	for i := 0; i < config.ConfigOptions.TestParameters.NMessages; i++ {
+func LoadTestSingleThread(quantity int, payload []byte, producer pulsar.Producer, consumer pulsar.Consumer) (LoadTestResults, error) {
+	var failedPayloads = 0
+	var successfulPayloads = 0
+	var timeElapsed = 0.0
+	var payloadPerSecond = 0.0
+	for i := 0; i < quantity; i++ {
 		start := time.Now()
-		_, err := SendMessage(
-			producer,
-			context.Background(),
-			[]byte(fmt.Sprintf(
-				config.ConfigOptions.TestParameters.ProducerParameters.Payload)))
+		_, err := SendMessage(producer, context.Background(), payload)
 
 		if err != nil {
 			_, err = ConsumeMessage(consumer)
@@ -76,29 +124,76 @@ func LoadTest(config ConfigFile) (LoadTestResults, error) {
 		}
 	}
 	return LoadTestResults{
-		TimeElapsed:        timeElapsed,
-		SuccessfulPayloads: successfulPayloads,
-		FailedPayloads:     failedPayloads,
-		AccumulativePayloadSize: int64(config.ConfigOptions.TestParameters.NMessages*
-			len(config.ConfigOptions.TestParameters.ProducerParameters.Payload)) / 8,
-		PayloadPerSecond: timeElapsed / float64(successfulPayloads),
+		TimeElapsed:             timeElapsed,
+		SuccessfulPayloads:      successfulPayloads,
+		FailedPayloads:          failedPayloads,
+		AccumulativePayloadSize: quantity * len(payload) / 8,
+		SecondsPerPayload:       timeElapsed / float64(successfulPayloads),
 	}, nil
 }
 
-func main() {
-	var config ConfigFile
-	configFilePath := DEFAULT_CONFIG_FILEPATH
-	if len(os.Args) > 1 {
-		configFilePath = os.Args[1]
+func LoadTestParallel(produceQuantity int, consumeQuantity int, payload []byte,
+	producer pulsar.Producer,
+	consumer pulsar.Consumer) (LoadTestResults, LoadTestResults) {
+	producerResults := LoadTestSendMessages(produceQuantity, payload, producer)
+	consumerResults := LoadTestConsumeMessages(consumeQuantity, consumer)
+
+	return producerResults, consumerResults
+}
+
+func LoadTestSendMessages(quantity int, payload []byte, producer pulsar.Producer) LoadTestResults {
+	var failedPayloads = 0
+	var successfulPayloads = 0
+	var timeElapsed = 0.0
+	var payloadPerSecond = 0.0
+	for i := 0; i < quantity; i++ {
+		start := time.Now()
+		_, err := SendMessage(producer, context.Background(), payload)
+		time := time.Since(start).Seconds()
+		timeElapsed += time
+
+		if err != nil {
+			failedPayloads++
+		} else {
+			payloadPerSecond += time
+			successfulPayloads++
+		}
 	}
-	err := LoadYaml(configFilePath, &config)
-	if err != nil {
-		log.Fatal(err)
+	return LoadTestResults{
+		TimeElapsed:             timeElapsed,
+		SuccessfulPayloads:      successfulPayloads,
+		FailedPayloads:          failedPayloads,
+		AccumulativePayloadSize: successfulPayloads * len(payload) / 8,
+		SecondsPerPayload:       payloadPerSecond / float64(successfulPayloads),
 	}
-	results, err := LoadTest(config)
-	if err != nil {
-		log.Println(err)
-	} else {
-		fmt.Printf("%+v\n", results)
+}
+
+func LoadTestConsumeMessages(quantity int, consumer pulsar.Consumer) LoadTestResults {
+	var failedPayloads = 0
+	var successfulPayloads = 0
+	var timeElapsed = 0.0
+	var payloadPerSecond = 0.0
+	var payloadSize = 0
+	for i := 0; i < quantity; i++ {
+		start := time.Now()
+		message, err := ConsumeMessage(consumer)
+		time := time.Since(start).Seconds()
+		timeElapsed += time
+		if err != nil {
+			failedPayloads++
+		} else {
+			if payloadSize == 0 {
+				payloadSize = len(message.Payload())
+			}
+			payloadPerSecond += time
+			successfulPayloads++
+		}
+	}
+	return LoadTestResults{
+		TimeElapsed:             timeElapsed,
+		SuccessfulPayloads:      successfulPayloads,
+		FailedPayloads:          failedPayloads,
+		AccumulativePayloadSize: successfulPayloads * payloadSize / 8,
+		SecondsPerPayload:       payloadPerSecond / float64(successfulPayloads),
 	}
 }
