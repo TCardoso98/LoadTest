@@ -4,15 +4,15 @@ Config:
   Auth_Certificate: "PULSAR_BROKER_CLIENT.cert.pem"
   Auth_Key: "PULSAR_BROKER_CLIENT.key.p8"
  Test_Parameters:
-  Parallel_Test: true
-  Multithread_Test: true
-  Consumer_Parameters:
-   Consumer_Topic: "TOPIC-A"
-   Subscription_Name: "sub_test"
-   Consumer_Name: ""
-   Consume_Quantity: 100
-  Producer_Parameters:
-   Producer_Topic: "TOPIC-A"
-   Producer_Name: ""
-   Produce_Quantity: 100
-   Payload: "Hello world"
+  Parallel_Test: false
+  Multithread_Test: false
+ Consumer_Parameters:
+  Consumer_Topic: "TOPIC-A"
+  Subscription_Name: "sub_test"
+  Consumer_Name: ""
+  Consume_Quantity: 100
+ Producer_Parameters:
+  Producer_Topic: "TOPIC-A"
+  Producer_Name: ""
+  Produce_Quantity: 100
+  Payload: "Hello world"
